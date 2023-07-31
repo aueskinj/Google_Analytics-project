@@ -1,0 +1,120 @@
+---
+title: "Case Study: How Does a Bike-Share Navigation"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+Import the packages
+```{r}
+library(tidyverse)
+```
+check the csv files
+```{r}
+list.files("../2022-divvy-tripdata")
+```
+loading the csv files into a data frame
+```{r}
+df = list.files(path = "../2022-divvy-tripdata", pattern = "*.csv", full.names = TRUE)%>%
+  lapply(read_csv)%>%
+  bind_rows()
+```
+Check the structure of the data frame
+```{r}
+str(df)
+View(df)
+```
+removing data cointaint empty rows 
+```{r}
+df_no_empty <- df %>%
+  filter(complete.cases(.))
+View(df_no_empty)
+```
+
+```{r}
+library(lubridate)
+library(hms)
+
+# Assuming you have a data frame called 'rides' with columns 'started_at' and 'ended_at'
+
+# Convert 'started_at' and 'ended_at' columns to POSIXct format
+df_no_empty$started_at <- ymd_hms(df_no_empty$started_at)
+df_no_empty$ended_at <- ymd_hms(df_no_empty$ended_at)
+```
+
+
+```{r}
+# Create 'day_of_week' column using the 'wday' function
+df_no_empty <- df_no_empty %>%
+  mutate(day_of_week = wday(started_at, label = TRUE))
+
+# Print the updated data frame
+View(df_no_empty)
+
+```
+format the date to ymd_hms format
+```{r}
+library(dplyr)
+library(lubridate)
+library(hms)
+
+# Assuming you have a data frame called 'rides' with columns 'started_at' and 'ended_at'
+
+# Convert 'started_at' and 'ended_at' columns to POSIXct format
+df_no_empty$started_at <- ymd_hms(df_no_empty$started_at)
+df_no_empty$ended_at <- ymd_hms(df_no_empty$ended_at)
+
+# Create 'ride_length' column by subtracting 'started_at' from 'ended_at' and format as HH:MM:SS
+```
+add the column ride length
+```{r}
+# Calculate the time difference in seconds
+complete_df<- df_no_empty %>%
+  mutate(ride_length = as.numeric(difftime(ended_at, started_at, units = "secs")))
+
+# Print the updated data frame
+View(complete_df)
+
+```
+descriptive analytics
+```{r}
+#for ride length
+summary(complete_df$ride_length)
+```
+```{r}
+#frequency of use for each day
+frequent_day=table(complete_df$day_of_week)
+frequent_day
+max(frequent_day)
+```
+Computing the average ride length with respect to user_type
+```{r}
+# Calculate the average ride length for members and casual riders
+average_ride_length <- complete_df %>%
+  group_by(complete_df$member_casual) %>%
+  summarize(average_ride_length = mean(ride_length, na.rm = TRUE))
+
+# Show the resulting data frame
+average_ride_length
+
+```
+```{r}
+# Calculate the average ride length for members and casual riders
+average_ride_length <- complete_df %>%
+  group_by(complete_df$day_of_week) %>%
+  summarize(average_ride_length = mean(ride_length, na.rm = TRUE))
+
+# Show the resulting data frame
+average_ride_length
+```
+```{r}
+# Calculate the number of rides for users by day_of_week
+rides_per_day_user <- complete_df %>%
+  group_by(complete_df$ride_id, complete_df$day_of_week) %>%
+  summarize(rides_count = n())
+rides_per_day_user
+```
+```{r}
+rides_per_day_user
+```
+
